@@ -9,15 +9,20 @@ services:
     container_name: ${PROJECT_NAME}-nginx
     restart: always
     ports:
-      - "8081:80"
+      - "80:80"
 
   php-fpm:
     build:
       context: ./docker/php-fpm
     volumes:
       - ./app:/symfony
+      - ./docker/php-fpm/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php-fpm/xdebug.log:/var/log/xdebug.log
     restart: always
     container_name: ${PROJECT_NAME}-php-fpm
+    environment:
+      XDEBUG_CONFIG: "remote_host=host.docker.internal remote_enable=1"
+      PHP_IDE_CONFIG: "serverName=Docker"
     depends_on:
       - mysql
 
@@ -46,3 +51,11 @@ services:
 
 volumes:
   mysql:
+
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.220.0/28
